@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { DefinitionData } from '../hooks/useWordHover';
+import type { DefinitionData } from '../hooks/useWordHover';
 
 interface DictionaryPopoverProps {
   isVisible: boolean;

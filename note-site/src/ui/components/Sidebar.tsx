@@ -38,35 +38,35 @@ export function Sidebar() {
     return (
         <aside className="w-80 bg-white border border-gray-200 rounded-xl shadow-sm my-4 ml-4 flex flex-col h-[calc(100vh-2rem)] overflow-hidden">
 
-            <div className="p-3 border-b border-gray-100 flex items-center gap-2">
+            <div className="p-3 border-b border-gray-100 flex items-center gap-2 bg-gray-50">
                 <span className="text-gray-400"></span> {/* перед span вписать изображение лупы */}
                 <input
                     type="text"
                     placeholder="Поиск..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full text-sm outline-none"
+                    className="w-full text-sm outline-none bg-white border border-gray-200 rounded-md px-3 py-1.5 text-gray-700 placeholder-gray-400 focus:border-blue-400"
                 />
             </div>
-            <div className="p-2 border-b border-gray-100 relative">
+            <div className="p-2 border-b border-gray-100 bg-gray-50 relative">
 
                 {/* сортировка (список) */}
                 {showSortMenu && (
                     <div className="absolute left-2 top-14 bg-white border border-gray-200 rounded-lg shadow-lg z-20 w-48 py-1 text-sm">
-                        <button onClick={() => handleSortChange('default')} className="w-full text-left px-3 py-2 hover:bg-gray-50">
+                        <button onClick={() => handleSortChange('default')} className="w-full text-left px-3 py-2 hover:bg-gray-50 text-gray-700">
                             По алфавиту (А-Я)
                         </button>
-                        <button onClick={() => handleSortChange('updated')} className="w-full text-left px-3 py-2 hover:bg-gray-50">
+                        <button onClick={() => handleSortChange('updated')} className="w-full text-left px-3 py-2 hover:bg-gray-50 text-gray-700">
                             По дате обновления
                         </button>
                     </div>
                 )}
             </div>
-            <div className="p-2 border-b border-gray-100 flex items-center gap-2 relative">
+            <div className="p-2 border-b border-gray-100 bg-gray-50 flex items-center gap-2 relative">
                 {/* сортировка */}
                 <button
                     onClick={() => setShowSortMenu(!showSortMenu)}
-                    className="w-10 h-10 border border-gray-200 rounded-lg flex items-center justify-center bg-gray-50 hover:bg-gray-100 text-lg shrink-0"
+                    className="w-10 h-10 border border-gray-200 rounded-lg flex items-center justify-center bg-white hover:bg-gray-50 text-lg shrink-0"
                     title="Выбрать сортировку"
                 >
                     <img
@@ -77,7 +77,7 @@ export function Sidebar() {
                 </button>
 
                 {/* вид сортировки отображает */}
-                <div className="flex-1 h-10 border border-gray-200 rounded-lg bg-gray-50 flex items-center px-3 text-xs font-medium text-gray-500">
+                <div className="flex-1 h-10 border border-gray-200 rounded-lg bg-white flex items-center px-3 text-xs font-medium text-gray-500">
                     {getSortLabel()}
                 </div>
 
@@ -86,13 +86,13 @@ export function Sidebar() {
                     <div className="absolute left-2 top-14 bg-white border border-gray-200 rounded-lg shadow-lg z-20 w-48 py-1 text-sm">
                         <button
                             onClick={() => handleSortChange('default')}
-                            className={`w-full text-left px-3 py-2 hover:bg-gray-50 ${sortBy === 'default' ? 'font-bold text-blue-600' : ''}`}
+                            className={`w-full text-left px-3 py-2 hover:bg-gray-50 ${sortBy === 'default' ? 'font-bold text-blue-600' : 'text-gray-700'}`}
                         >
                             По алфавиту (А-Я)
                         </button>
                         <button
                             onClick={() => handleSortChange('updated')}
-                            className={`w-full text-left px-3 py-2 hover:bg-gray-50 ${sortBy === 'updated' ? 'font-bold text-blue-600' : ''}`}
+                            className={`w-full text-left px-3 py-2 hover:bg-gray-50 ${sortBy === 'updated' ? 'font-bold text-blue-600' : 'text-gray-700'}`}
                         >
                             По дате обновления
                         </button>
@@ -100,7 +100,7 @@ export function Sidebar() {
                 )}
             </div>
 
-            <div className="p-2 border-b border-gray-100 grid grid-cols-5 gap-1 relative">
+            <div className="p-2 border-b border-gray-100 bg-gray-50 grid grid-cols-5 gap-1 relative">
 
                 {bulkMode ? (
                     /* Кнопка Отмены (появляется вместо Добавить) */
@@ -118,7 +118,7 @@ export function Sidebar() {
                     /* добавить заметку или список задач (кнопка) */
                     <button
                         onClick={() => setShowAddMenu(!showAddMenu)}
-                        className="w-15 h-15 p-0 border border-gray-200 rounded-md bg-gray-50 hover:bg-gray-100 flex items-center justify-center overflow-hidden mx-auto"
+                        className="w-15 h-15 p-0 border border-gray-200 rounded-md bg-gray-100 hover:bg-gray-200 flex items-center justify-center overflow-hidden mx-auto"
                         title="Добавить"
                     >
                         <img
@@ -143,9 +143,9 @@ export function Sidebar() {
                             if (activeNoteId) deleteNote(activeNoteId);
                         }
                     }}
-                    className={`w-15 h-15 p-0 text-center border border-4 rounded-md text-sm flex items-center justify-center mx-auto w-15 h-15 transition-colors ${bulkMode && selectedNotes && selectedNotes.length > 0
+                    className={`w-15 h-15 p-0 text-center border border-gray-200 rounded-md text-sm flex items-center justify-center mx-auto w-15 h-15 transition-colors ${bulkMode && selectedNotes && selectedNotes.length > 0
                         ? 'bg-red-500 border-red-300 text-white hover:bg-red-600' // Подсвечиваем красным, если есть что удалять в bulk-режиме
-                        : 'bg-gray-50 hover:bg-gray-100'
+                        : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
                         }`}
                     title={bulkMode ? "Удалить выбранные" : "Удалить"}
                 >
@@ -158,7 +158,7 @@ export function Sidebar() {
                 {/* выделить несколько */}
                 <button
                     onClick={() => setBulkMode(!bulkMode)}
-                    className={`w-15 h-15 p-0 text-center border border-4 rounded-md text-sm flex items-center justify-center mx-auto transition-colors ${bulkMode ? 'bg-blue-100 border-fuchsia-200 text-white' : 'bg-gray-50 hover:bg-gray-100'
+                    className={`w-15 h-15 p-0 text-center border border-gray-200 rounded-md text-sm flex items-center justify-center mx-auto transition-colors ${bulkMode ? 'bg-blue-100 border-blue-300 text-blue-700' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
                         }`}
                     title="Выбрать несколько"
                 >
@@ -171,7 +171,7 @@ export function Sidebar() {
                 {/* экспорт */}
                 <button
                     onClick={exportToAnki}
-                    className="w-15 h-15 p-0 text-center border rounded-md bg-gray-50 hover:bg-gray-100 text-sm flex items-center justify-center mx-auto w-15 h-15"
+                    className="w-15 h-15 p-0 text-center border border-gray-200 rounded-md bg-gray-100 hover:bg-gray-200 text-sm flex items-center justify-center mx-auto w-15 h-15 text-gray-700"
                     title="Экспорт"
                 >
                     <img
@@ -185,7 +185,7 @@ export function Sidebar() {
                     onClick={() => {
                         if (!bulkMode && activeNoteId) togglePin(activeNoteId);
                     }}
-                    className={`w-15 h-15 p-0 text-center border rounded-md text-sm flex items-center justify-center mx-auto w-15 h-15 ${bulkMode ? 'opacity-30 cursor-not-allowed' : 'bg-gray-50 hover:bg-gray-100'
+                    className={`w-15 h-15 p-0 text-center border border-gray-200 rounded-md text-sm flex items-center justify-center mx-auto w-15 h-15 ${bulkMode ? 'opacity-30 cursor-not-allowed bg-gray-100' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
                         }`}
                     disabled={bulkMode}
                     title="Закрепить"
@@ -202,13 +202,13 @@ export function Sidebar() {
                     <div className="absolute left-2 top-12 bg-white border border-gray-200 rounded-lg shadow-lg z-20 w-40 py-1 text-sm">
                         <button
                             onClick={() => { createNote('note'); setShowAddMenu(false); }}
-                            className="w-full text-left px-3 py-2 hover:bg-gray-50 flex items-center gap-2"
+                            className="w-full text-left px-3 py-2 hover:bg-gray-50 text-gray-700"
                         >
                             Заметка
                         </button>
                         <button
                             onClick={() => { createNote('todo'); setShowAddMenu(false); }}
-                            className="w-full text-left px-3 py-2 hover:bg-gray-50 flex items-center gap-2"
+                            className="w-full text-left px-3 py-2 hover:bg-gray-50 text-gray-700"
                         >
                             Список задач
                         </button>
@@ -216,7 +216,7 @@ export function Sidebar() {
                 )}
             </div>
 
-            <div className="flex-1 overflow-y-auto p-2 space-y-1.5">
+            <div className="flex-1 overflow-y-auto p-2 space-y-1.5 bg-white">
                 {notes.map((note) => {
                     const isSelected = selectedNotes ? selectedNotes.includes(note.id) : false;
 

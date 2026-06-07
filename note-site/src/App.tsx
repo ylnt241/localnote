@@ -6,7 +6,6 @@ export default function App() {
     const { 
         activeNote, 
         updateNote, 
-        saveNote, 
         exportToAnki 
     } = useNotes();
 
@@ -14,7 +13,7 @@ export default function App() {
         return (
             <div className="w-full h-screen bg-gray-100 flex overflow-hidden font-sans antialiased">
                 <Sidebar />
-                <div className="flex-1 flex flex-col p-4">
+                <div className="flex-1 flex flex-col p-4 min-w-0">
                     <div className="flex-1 bg-white border border-gray-200 rounded-xl shadow-sm flex flex-col items-center justify-center text-gray-400 p-6">
                         <span className="text-4xl mb-2">📓</span>
                         <p className="text-sm font-medium">Выберите заметку в меню слева или создайте новую</p>
@@ -30,17 +29,6 @@ export default function App() {
 
     const handleTitleChange = (title: string) => {
         updateNote(activeNote.id, { title });
-    };
-
-    const handleSave = async () => {
-        // The updateNote method already handles saving and updates saveStatus
-        // We can trigger a save by calling updateNote with current values
-        updateNote(activeNote.id, { 
-            title: activeNote.title, 
-            content: activeNote.content,
-            tags: activeNote.tags,
-            color: activeNote.color
-        });
     };
 
     const handleExportToAnki = () => {
@@ -61,10 +49,20 @@ export default function App() {
         updateNote(activeNote.id, { color });
     };
 
+    const handleSave = async () => {
+        await new Promise(resolve => setTimeout(resolve, 100));
+        updateNote(activeNote.id, { 
+            title: activeNote.title, 
+            content: activeNote.content,
+            tags: activeNote.tags,
+            color: activeNote.color
+        });
+    };
+
     return (
         <div className="w-full h-screen bg-gray-100 flex overflow-hidden font-sans antialiased">
             <Sidebar />
-            <div className="flex-1 flex flex-col p-4">
+            <div className="flex-1 flex flex-col p-4 min-w-0">
                 <MainPanel
                     content={activeNote.content}
                     title={activeNote.title}
