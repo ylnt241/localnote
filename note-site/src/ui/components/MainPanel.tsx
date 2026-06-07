@@ -1,171 +1,220 @@
-﻿import { useState} from 'react';
-import { useNotes } from '../hooks/useNotes';
-import { ScrollArea } from '../shared/ScrollArea';
+import { NoteEditor } from './NoteEditor';
+import { NoteReader } from './NoteReader';
+import { SaveStatusIndicator } from '../shared/SaveStatusIndicator';
+import type { SaveStatus } from '../hooks/useNotes.ts';
+import { useState, KeyboardEvent, useRef, useEffect } from 'react';
+import { cn } from '../shared/utils';
 
-export function MainPanel({ showColorPicker, setShowColorPicker }) {
-    const { activeNote, updateNote, saveStatus} = useNotes();
-    const [tagInput, setTagInput] = useState('');
-    const colors = ['#ffffff', '#fecaca', '#fed7aa', '#fef08a', '#bbf7d0', '#bfdbfe', '#ddd6fe'];
+interface MainPanelProps {
+  content: string;
+  title: string;
+  onContentChange: (content: string) => void;
+  onTitleChange: (title: string) => void;
+  onSave: () => Promise<void>;
+  onExportToAnki: () => void;
+  saveStatus: SaveStatus;
+  onAddTag?: (tag: string) => void;
+  onRemoveTag?: (tag: string) => void;
+  onUpdateColor?: (color: string) => void;
+  currentTags?: string[];
+  currentColor?: string;
+}
 
-    if (!activeNote) {
-        return (
-            <div className="flex-1 bg-white border border-gray-200 rounded-xl shadow-sm p-6 flex items-center justify-center text-gray-400 mt-4 mr-4">
-                Выберите элемент или создайте новый
-            </div>
-        );
+const colorOptions = [
+  { value: 'bg-transparent', label: 'Default', bgClass: 'bg-slate-800' },
+  { value: 'bg-emerald-950/40', label: 'Emerald', bgClass: 'bg-emerald-950' },
+  { value: 'bg-blue-950/40', label: 'Neon Blue', bgClass: 'bg-blue-950' },
+  { value: 'bg-rose-950/40', label: 'Ruby Red', bgClass: 'bg-rose-950' },
+  { value: 'bg-purple-950/40', label: 'Amethyst', bgClass: 'bg-purple-950' },
+  { value: 'bg-amber-950/30', label: 'Amber', bgClass: 'bg-amber-950' },
+];
+
+export function MainPanel({
+  content,
+  title,
+  onContentChange,
+  onTitleChange,
+  onSave,
+  onExportToAnki,
+  saveStatus,
+  onAddTag,
+  onRemoveTag,
+  onUpdateColor,
+  currentTags = [],
+  currentColor = 'bg-transparent',
+}: MainPanelProps) {
+  const [tagInput, setTagInput] = useState('');
+  const [showColorPicker, setShowColorPicker] = useState(false);
+  const colorPickerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (colorPickerRef.current && !colorPickerRef.current.contains(event.target as Node)) {
+        setShowColorPicker(false);
+      }
     }
 
-    // Превращаем системную дату в красивую строчку (Дата и Время)
-    // Если у заметки почему-то нет даты обновления, мы берем стабильный 0 вместо impure Date.now()
-    const formattedDate = new Date(activeNote.updatedAt || 0).toLocaleString('ru-RU', {
-        day: 'numeric',
-        month: 'short',
-        hour: '2-digit',
-        minute: '2-digit'
-    });
+    if (showColorPicker) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showColorPicker]);
 
-    // Обработчики тегов
-    const handleAddTag = () => {
-        const newTag = tagInput.trim().toLowerCase();
-        if (newTag && !activeNote.tags.includes(newTag)) {
-            updateNote(activeNote.id, { tags: [...activeNote.tags, newTag] });
-        }
+  const handleTagInputKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && tagInput.trim() && onAddTag) {
+      e.preventDefault();
+      const normalizedTag = tagInput.trim().toLowerCase();
+      if (!currentTags.includes(normalizedTag)) {
+        onAddTag(normalizedTag);
         setTagInput('');
-    };
+      }
+    }
+  };
 
-    const handleRemoveTag = (tagToRemove) => {
-        updateNote(activeNote.id, { tags: activeNote.tags.filter(t => t !== tagToRemove) });
-    };
+  const handleRemoveTag = (tag: string) => {
+    if (onRemoveTag) {
+      onRemoveTag(tag);
+    }
+  };
 
-    // РАЗДЕЛЕНИЕ: Логика для Задач
-    const lines = activeNote.content.split('\n');
+  const handleColorClick = (color: string) => {
+    if (onUpdateColor) {
+      onUpdateColor(color);
+    }
+    setShowColorPicker(false);
+  };
 
-    const handleToggleTask = (index) => {
-        const updatedLines = [...lines];
-        const line = updatedLines[index];
-        if (line.includes('- [ ]')) updatedLines[index] = line.replace('- [ ]', '- [x]');
-        else if (line.includes('- [x]')) updatedLines[index] = line.replace('- [x]', '- [ ]');
-        updateNote(activeNote.id, { content: updatedLines.join('\n') });
-    };
+  return (
+    <div className="flex flex-col h-full bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+      {/* Header with Title and Actions */}
+      <header className="border-b border-gray-200 bg-gray-50 px-5 py-3 flex-shrink-0">
+        <div className="flex items-center justify-between gap-4 mb-3">
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => onTitleChange(e.target.value)}
+            className="text-lg font-semibold bg-white border border-gray-300 rounded-md px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent flex-1 text-gray-800 placeholder-gray-400"
+            placeholder="Note title..."
+          />
 
-    return (
-        // Панель смещена вниз на mt-4 и имеет скруглённые углы rounded-xl
-        <div className="flex-1 bg-white border border-gray-200 rounded-xl shadow-sm flex flex-col h-[calc(100vh-6rem)] overflow-hidden mr-4 relative" key={activeNote.id}>
+          <div className="flex items-center gap-3 flex-shrink-0">
+            <SaveStatusIndicator status={saveStatus} />
 
-            {/* ВЕРХНЯЯ СТРОКА: Название слева, Дата справа */}
-            <div className="p-4 flex justify-between items-start border-b border-gray-50">
-                <input
-                    type="text"
-                    value={activeNote.title}
-                    onChange={(e) => updateNote(activeNote.id, { title: e.target.value })}
-                    className="text-xl font-bold text-gray-800 outline-none flex-1"
-                    placeholder="Без названия"
-                />
-                <span className="text-xs text-gray-400 bg-gray-50 px-2 py-1 rounded-md shrink-0 ml-4">
-                    📅 {formattedDate}
-                </span>
-            </div>
+            <div className="h-5 w-px bg-gray-300" />
 
-            {/* СТРОКА НИЖЕ: Теги заметки */}
-            <div className="px-4 py-2 flex flex-wrap gap-1.5 items-center bg-gray-50/50 border-b border-gray-50">
-                {activeNote.tags.map((tag) => (
-                    <span key={tag} className="bg-gray-200/80 text-gray-700 px-2 py-0.5 rounded text-xs flex items-center gap-1 font-medium">
-                        #{tag}
-                        <button onClick={() => handleRemoveTag(tag)} className="text-red-500 font-bold hover:text-red-700">×</button>
-                    </span>
+            <button
+              onClick={onSave}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md transition-colors active:scale-95"
+            >
+              <img src="/save-icon.jpg" alt="Save" className="w-4 h-4 inline mr-1" />
+              Save
+            </button>
+
+            <button
+              onClick={onExportToAnki}
+              className="px-4 py-2 bg-white border-2 border-blue-600 text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+            >
+              <img src="/export-icon.jpg" alt="Export" className="w-4 h-4 inline mr-1" />
+              Export
+            </button>
+          </div>
+        </div>
+
+        {/* Tags and Color Picker */}
+          <div className="flex items-center gap-4 flex-shrink-0">
+            <div className="flex-1 flex items-center gap-2">
+              <img src="/tag-icon.jpg" alt="Tag" className="w-3.5 h-3.5 text-gray-500" />
+              <div className="flex-1 flex items-center gap-2 flex-wrap">
+                {currentTags.map((tag) => (
+                  <div
+                    key={tag}
+                    className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-100 border border-blue-300 rounded-md text-xs text-blue-700"
+                  >
+                    <span>#{tag}</span>
+                    <button
+                      onClick={() => handleRemoveTag(tag)}
+                      className="hover:text-blue-600 transition-colors"
+                    >
+                      <img src="/remove-icon.jpg" alt="Remove" className="w-3 h-3" />
+                    </button>
+                  </div>
                 ))}
                 <input
-                    type="text"
-                    value={tagInput}
-                    onChange={(e) => setTagInput(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleAddTag()}
-                    placeholder="+ тег..."
-                    className="w-16 text-xs bg-transparent outline-none border-b border-transparent focus:border-gray-400"
+                  type="text"
+                  value={tagInput}
+                  onChange={(e) => setTagInput(e.target.value)}
+                  onKeyDown={handleTagInputKeyDown}
+                  placeholder="Add tag... (Enter)"
+                  className="px-2 py-0.5 bg-white border border-gray-300 rounded-md text-xs text-gray-600 placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:bg-gray-50 w-28"
                 />
+              </div>
             </div>
 
-            {/* Палитра цветов (показывается по команде из тулбара) */}
+            {/* Color Picker Dropdown */}
+            <div className="relative" ref={colorPickerRef}>
+              <button
+                onClick={() => setShowColorPicker(!showColorPicker)}
+                className="flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-300 rounded-md text-gray-600 text-sm font-medium hover:bg-gray-50 transition-colors"
+                title="Change note color"
+              >
+                <img src="/palette-icon.jpg" alt="Color" className="w-3.5 h-3.5" />
+                <span>Color</span>
+              </button>
+
             {showColorPicker && (
-                <div className="absolute left-4 top-14 bg-white border border-gray-200 rounded-lg shadow-lg z-30 p-2 flex gap-1.5">
-                    {colors.map((color) => (
-                        <button
-                            key={color}
-                            className="w-6 h-6 rounded-full border border-gray-300"
-                            style={{ backgroundColor: color }}
-                            onClick={() => {
-                                updateNote(activeNote.id, { color: color });
-                                setShowColorPicker(false);
-                            }}
-                        />
-                    ))}
+              <div className="absolute right-0 top-full mt-2 z-50 bg-white border border-gray-200 rounded-lg shadow-lg min-w-[200px]">
+                <div className="grid grid-cols-3 gap-2 p-2">
+                  {colorOptions.map((option) => (
+                    <button
+                      key={option.value}
+                      onClick={() => handleColorClick(option.value)}
+                      className={cn(
+                        'flex flex-col items-center gap-1 p-2 rounded-lg transition-all duration-200 hover:bg-gray-50',
+                        currentColor === option.value
+                          ? 'bg-blue-100 border border-blue-300 ring-1 ring-blue-200'
+                          : 'border border-gray-200'
+                      )}
+                      title={option.label}
+                    >
+                      <div className={cn(
+                        'w-6 h-6 rounded-full border-2 transition-all',
+                        currentColor === option.value
+                          ? 'border-blue-500 scale-110'
+                          : 'border-gray-300 hover:border-gray-400',
+                        option.value === 'bg-transparent' ? 'bg-white border-gray-300' : option.value
+                      )} />
+                      <span className="text-xs text-gray-600">
+                        {option.label}
+                      </span>
+                    </button>
+                  ))}
                 </div>
+              </div>
             )}
-
-            {/* ЦЕНТРАЛЬНЫЙ КОНТЕНТ ВВОДА */}
-            <ScrollArea className="flex-1 p-4">
-                {activeNote.type === 'todo' ? (
-                    /* ИНТЕРФЕЙС ЗАДАЧ: Расстояние между строками больше (space-y-4) */
-                    <div className="space-y-4 max-w-xl">
-                        {lines.map((line, idx) => {
-                            const isChecked = line.includes('- [x]');
-                            const isUnchecked = line.includes('- [ ]');
-                            if (!isChecked && !isUnchecked && line.trim() === '') return null;
-
-                            const cleanText = line.replace('- [ ]', '').replace('- [x]', '').trim();
-
-                            return (
-                                <div key={idx} className="flex items-center gap-3">
-                                    {/* Место под меняющуюся картинку чекбокса */}
-                                    <button
-                                        onClick={() => handleToggleTask(idx)}
-                                        className="w-6 h-6 border border-gray-300 rounded flex items-center justify-center bg-gray-50 hover:bg-gray-100 text-sm shrink-0"
-                                    >
-                                        {isChecked ? '✅' : '⬜'}
-                                    </button>
-                                    <span className={`text-sm ${isChecked ? 'line-through text-gray-400' : 'text-gray-700'}`}>
-                                        {cleanText || <span className="text-gray-300 italic">Новое задание</span>}
-                                    </span>
-                                </div>
-                            );
-                        })}
-
-                        {/* Быстрое добавление новой строки в список задач */}
-                        <input
-                            type="text"
-                            placeholder="+ Новая задача (Нажмите Enter)..."
-                            className="w-full text-sm p-1.5 border border-dashed rounded-md outline-none"
-                            onKeyDown={(e) => {
-                                if (e.key === 'Enter' && e.currentTarget.value.trim()) {
-                                    const val = e.currentTarget.value.trim();
-                                    const nextContent = activeNote.content ? `${activeNote.content}\n- [ ] ${val}` : `- [ ] ${val}`;
-                                    updateNote(activeNote.id, { content: nextContent });
-                                    e.currentTarget.value = '';
-                                }
-                            }}
-                        />
-                    </div>
-                ) : (
-                    /* ИНТЕРФЕЙС ОБЫЧНОЙ ЗАМЕТКИ */
-                    <textarea
-                        value={activeNote.content}
-                        onChange={(e) => updateNote(activeNote.id, { content: e.target.value })}
-                        placeholder="Начните писать здесь..."
-                        className="w-full h-full min-h-[400px] outline-none text-sm text-gray-700 leading-relaxed resize-none"
-                    />
-                )}
-            </ScrollArea>
-
-            {/* ВНИЗУ СЛЕВА: Прямоугольное место под сменяющиеся картинки статуса сохранения */}
-            <div className="absolute left-4 bottom-4 w-28 h-8 border border-gray-200 rounded-md flex items-center justify-center bg-gray-50 text-xs font-medium text-gray-500 shadow-sm">
-                {saveStatus === 'saving' || saveStatus === 'typing' ? (
-                    <span className="flex items-center gap-1">⏳ Сохраняю...</span> // Картинка / Статус 1
-                ) : (
-                    <span className="flex items-center gap-1 text-green-600">✨ Сохранено</span> // Картинка / Статус 2
-                )
-                    // Кнопка сохранения в панели инструментов будет принудительно вызывать setSaveStatus('saving'),
-                    // имитируя ручной и автоматический процесс записи!
-                }
-            </div>
+          </div>
         </div>
-    );
+      </header>
+
+      {/* Editor and Preview */}
+      <main className="flex-1 flex overflow-hidden">
+        <div className="w-1/2 border-r border-gray-200 flex flex-col">
+          <div className="px-5 py-2.5 border-b border-gray-200 bg-gray-50 text-xs font-medium text-gray-500">
+            Editor
+          </div>
+          <div className="flex-1 overflow-auto">
+            <NoteEditor content={content} onChange={onContentChange} />
+          </div>
+        </div>
+
+        <div className="w-1/2 flex flex-col">
+          <div className="px-5 py-2.5 border-b border-gray-200 bg-gray-50 text-xs font-medium text-gray-500">
+            Preview
+          </div>
+          <div className="flex-1 overflow-auto">
+            <NoteReader content={content} onContentChange={onContentChange} />
+          </div>
+        </div>
+      </main>
+    </div>
+  );
 }

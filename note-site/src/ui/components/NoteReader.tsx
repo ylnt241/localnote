@@ -3,8 +3,8 @@ import { useState, useCallback } from 'react';
 import { useMarkdownProcessor } from '../hooks/useMarkdownProcessor';
 import { useWordHover } from '../hooks/useWordHover';
 import { DictionaryPopover } from './DictionaryPopover';
-import { dictionaryService } from '../services/DictionaryService';
-import { toggleTaskInNote } from '@/core/utils/tasks';
+import { dictionaryService } from '../../services/DictionaryService';
+import { toggleTaskInNote } from '../../core/utils/tasks';
 import 'katex/dist/katex.min.css';
 
 interface NoteReaderProps {
