@@ -144,8 +144,8 @@ export function Sidebar() {
                         }
                     }}
                     className={`w-15 h-15 p-0 text-center border border-4 rounded-md text-sm flex items-center justify-center mx-auto w-15 h-15 transition-colors ${bulkMode && selectedNotes && selectedNotes.length > 0
-                            ? 'bg-red-500 border-red-300 text-white hover:bg-red-600' // Подсвечиваем красным, если есть что удалять в bulk-режиме
-                            : 'bg-gray-50 hover:bg-gray-100'
+                        ? 'bg-red-500 border-red-300 text-white hover:bg-red-600' // Подсвечиваем красным, если есть что удалять в bulk-режиме
+                        : 'bg-gray-50 hover:bg-gray-100'
                         }`}
                     title={bulkMode ? "Удалить выбранные" : "Удалить"}
                 >
