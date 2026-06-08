@@ -17,7 +17,7 @@ export const TasksPage: FC<TasksPageProps> = ({ notes, updateNote, onClose }) =>
     for (const note of notes) {
       const tasks = parseTasksFromNote(note);
       total += tasks.length;
-      done += tasks.filter((t) => t.checked).length;
+      done += tasks.filter((t: any) => t.checked).length;
     }
     return { total, done };
   }, []);

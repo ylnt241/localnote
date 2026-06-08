@@ -1,4 +1,16 @@
-﻿export function NoteCard({
+﻿import type { Note } from '../../../core/entities/Note';
+
+interface NoteCardProps {
+    note: Note;
+    isActive: boolean;
+    onSelect: () => void;
+    onTogglePin: () => void;
+    isBulkMode: boolean;
+    isSelected: boolean;
+    onToggleSelect: () => void;
+}
+
+export function NoteCard({
     note,
     isActive,
     onSelect,
@@ -6,7 +18,7 @@
     isBulkMode,
     isSelected,
     onToggleSelect
-}) {
+}: NoteCardProps) {
     const handleCardClick = () => {
         if (isBulkMode) {
             onToggleSelect();

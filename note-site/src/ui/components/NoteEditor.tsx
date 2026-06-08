@@ -1,7 +1,7 @@
 import type { TextareaHTMLAttributes } from 'react';
 import { forwardRef, useEffect } from 'react';
 
-interface NoteEditorProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
+interface NoteEditorProps extends Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, 'onChange'> {
   content?: string;
   onChange?: (content: string) => void;
   autoFocus?: boolean;
@@ -24,19 +24,15 @@ export const NoteEditor = forwardRef<HTMLTextAreaElement, NoteEditorProps>(
     };
 
     return (
-      <div className="w-full">
-        {label && <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>}
-        <textarea
-          ref={ref}
-          value={value !== undefined ? value : content}
-          onChange={handleChange}
-          className={`w-full p-4 border rounded-lg text-sm text-gray-700 leading-relaxed resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[400px] ${error ? 'border-red-500' : 'border-gray-300'
-            } ${className}`}
-          placeholder="Начните писать здесь..."
-          {...props}
-        />
-        {error && <p className="mt-1 text-sm text-red-500">{error}</p>}
-      </div>
+      <textarea
+        ref={ref}
+        value={value !== undefined ? value : content}
+        onChange={handleChange}
+        className="w-full h-full min-h-[400px] p-4 font-mono text-sm resize-none border-0 focus:outline-none bg-transparent text-gray-800 placeholder-gray-500 whitespace-pre-wrap break-words overflow-hidden max-w-full [&_span.word-token]:break-words [&_span.word-token]:overflow-hidden [&_span.word-token]:text-ellipsis"
+        placeholder="Начните писать здесь..."
+        {...props}
+      />
     );
   },
 );
+

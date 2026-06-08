@@ -1,5 +1,11 @@
 ﻿
-export function Toolbar({ onSave, onOpenColorPicker, onFormatText }) {
+interface ToolbarProps {
+    onSave: () => void;
+    onOpenColorPicker: () => void;
+    onFormatText: () => void;
+}
+
+export function Toolbar({ onSave, onOpenColorPicker, onFormatText }: ToolbarProps) {
     return (
         // Равные кнопки делаются через сетку grid-cols-5
         <div className="h-12 bg-white border border-gray-200 rounded-xl shadow-sm px-4 flex items-center w-full">
@@ -25,16 +31,16 @@ export function Toolbar({ onSave, onOpenColorPicker, onFormatText }) {
                     ✍️ Формат
                 </button>
 
-                {/* Две пустые кнопки без функций (null) */}
+                {/* Две пустые кнопки без функций (undefined) */}
                 <button
-                    onClick={null}
+                    onClick={undefined}
                     className="py-1 px-3 border border-gray-200 rounded-md bg-gray-100 text-xs font-medium text-gray-400 text-center truncate cursor-not-allowed"
                 >
                     ⚙️ Настройки (—)
                 </button>
 
                 <button
-                    onClick={null}
+                    onClick={undefined}
                     className="py-1 px-3 border border-gray-200 rounded-md bg-gray-100 text-xs font-medium text-gray-400 text-center truncate cursor-not-allowed"
                 >
                     🔒 Приватность (—)

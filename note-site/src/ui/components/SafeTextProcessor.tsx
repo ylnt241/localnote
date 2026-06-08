@@ -27,7 +27,7 @@ export const SafeTextProcessor: FC<SafeProcessorProps> = ({ text, onWordHover, o
   const parts = text.split(regex);
 
   return (
-    <div className={`text-sm text-gray-700 ${className}`}>
+    <>
       {parts.map((part, index) => {
         if (part.startsWith('$$') && part.endsWith('$$')) {
           const formula = part.slice(2, -2).trim();
@@ -42,9 +42,11 @@ export const SafeTextProcessor: FC<SafeProcessorProps> = ({ text, onWordHover, o
         }
 
         return (
-          <span key={index}>
+          <span key={index} className={`text-sm text-gray-700 ${className}`}>
             {part.split(/(\s+)/).map((subPart, subIndex) => {
-              if (/^\s+$/.test(subPart)) return subPart;
+              if (/^\s+$/.test(subPart)) {
+                return subPart;
+              }
               
               const cleanWord = subPart.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?"']/g, "");
               
@@ -53,7 +55,7 @@ export const SafeTextProcessor: FC<SafeProcessorProps> = ({ text, onWordHover, o
               return (
                 <span
                   key={subIndex}
-                  className="word-token hover:bg-blue-50 rounded-sm cursor-pointer transition-colors text-gray-700"
+                  className="word-token hover:bg-blue-50 rounded-sm cursor-pointer transition-colors text-gray-700 break-words overflow-hidden"
                   onMouseEnter={(e) => {
                     (e.target as HTMLElement).focus();
                     onWordHover(cleanWord);
@@ -67,6 +69,6 @@ export const SafeTextProcessor: FC<SafeProcessorProps> = ({ text, onWordHover, o
           </span>
         );
       })}
-    </div>
+    </>
   );
 };

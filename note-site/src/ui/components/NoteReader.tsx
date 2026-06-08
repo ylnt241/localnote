@@ -3,8 +3,8 @@ import { useState, useCallback } from 'react';
 import { useMarkdownProcessor } from '../hooks/useMarkdownProcessor';
 import { useWordHover } from '../hooks/useWordHover';
 import { DictionaryPopover } from './DictionaryPopover';
-import { dictionaryService } from '../services/DictionaryService';
-import { toggleTaskInNote } from '@/core/utils/tasks';
+import { dictionaryService } from '../../services/DictionaryService';
+import { toggleTaskInNote } from '../../core/utils/tasks';
 import 'katex/dist/katex.min.css';
 
 interface NoteReaderProps {
@@ -62,19 +62,16 @@ export const NoteReader: FC<NoteReaderProps> = ({ content, onContentChange, labe
   });
 
   return (
-    <div className={`w-full ${className}`}>
-      {label && <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>}
-      <div className="w-full p-4 bg-white border border-gray-200 rounded-lg text-sm text-gray-700 leading-relaxed min-h-[400px] relative">
-        {processedContent}
-        <DictionaryPopover
-          isVisible={wordHover.isPoppedOpen}
-          isLoading={wordHover.isLoading}
-          definitionData={wordHover.definitionData}
-          error={wordHover.error}
-          targetPosition={popoverPosition}
-          onClose={closePopover}
-        />
-      </div>
+    <div className="w-full h-full min-h-[400px] p-4 bg-transparent text-gray-800 break-words overflow-y-auto max-w-full [&_span.word-token]:break-words [&_span.word-token]:overflow-hidden [&_span.word-token]:text-ellipsis">
+      {processedContent}
+      <DictionaryPopover
+        isVisible={wordHover.isPoppedOpen}
+        isLoading={wordHover.isLoading}
+        definitionData={wordHover.definitionData}
+        error={wordHover.error}
+        targetPosition={popoverPosition}
+        onClose={closePopover}
+      />
     </div>
   );
 };

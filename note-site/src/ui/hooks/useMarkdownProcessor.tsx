@@ -1,4 +1,5 @@
 import { useMemo, useRef, useCallback } from 'react';
+import React, { Children, isValidElement, ReactElement } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeSanitize, { defaultSchema } from 'rehype-sanitize';
@@ -86,34 +87,36 @@ export function useMarkdownProcessor({ markdown, onWordHover, onWordLeave, onTog
   }, [markdown, onToggleCheckbox]);
 
   const components: Components = useMemo(() => {
-    taskCounterRef.current = 0;
-
     if (!onWordHover || !onWordLeave) {
       return onToggleCheckbox
         ? {
             li: ({ children }: LiProps) => {
               const taskIndex = taskCounterRef.current;
-              const childrenArr = React.Children.toArray(children);
+              const childrenArr = Children.toArray(children);
               const inputIndex = childrenArr.findIndex(
-                (child) => React.isValidElement(child) && child.type === 'input',
+                (child) => isValidElement(child) && child.type === 'input',
               );
 
               if (inputIndex >= 0) {
                 taskCounterRef.current += 1;
-                const input = childrenArr[inputIndex] as React.ReactElement;
+                const input = childrenArr[inputIndex] as ReactElement;
                 const checked = input.props.checked === true || input.props.checked === 'true';
                 return (
-<li className="task-list-item flex items-start gap-2 my-1">
-                     <input
-                       type="checkbox"
-                       checked={checked}
-                       onChange={() => handleToggleCheckbox(taskIndex)}
-                       className="mt-1 h-4 w-4 rounded border-gray-300 bg-white checked:bg-blue-500 cursor-pointer flex-shrink-0 focus:ring-2 focus:ring-blue-500"
-                     />
-                     <span className="flex-1 min-w-0 text-gray-700">
-                       {childrenArr.filter((_, i) => i !== inputIndex)}
-                     </span>
-                   </li>
+                  <li className="task-list-item flex items-center gap-1 my-2">
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() => handleToggleCheckbox(taskIndex)}
+                      className="h-4 w-4 rounded border-gray-300 bg-white checked:bg-blue-500 cursor-pointer flex-shrink-0 focus:ring-2 focus:ring-blue-500"
+                    />
+                    <span className="flex-1 min-w-0 text-gray-700 leading-relaxed">
+                      {typeof children === 'string' ? (
+                        <span className="text-sm text-gray-700">{children}</span>
+                      ) : (
+                        childrenArr.filter((_, i) => i !== inputIndex)
+                      )}
+                    </span>
+                  </li>
                 );
               }
 
@@ -133,42 +136,30 @@ export function useMarkdownProcessor({ markdown, onWordHover, onWordLeave, onTog
 
     return {
       p: ({ children }: PProps) => {
-        if (typeof children === 'string') {
-          return (
-            <p className="leading-relaxed my-2 text-gray-700">
-              <SafeTextProcessor onWordHover={handleWordHoverFn} onWordLeave={handleWordLeaveFn} text={children} />
-            </p>
-          );
-        }
+        const textContent = typeof children === 'string' ? children : 
+          Children.map(children, child => typeof child === 'string' ? child : '').join('');
+        
         return (
-          <p className="leading-relaxed my-2 text-gray-700">
-            {React.Children.map(children, child => {
-              if (typeof child === 'string') {
-                return (
-                  <SafeTextProcessor onWordHover={handleWordHoverFn} onWordLeave={handleWordLeaveFn} text={child} />
-                );
-              }
-              return child;
-            })}
+          <p className="leading-relaxed my-1 text-gray-700">
+            <SafeTextProcessor onWordHover={handleWordHoverFn} onWordLeave={handleWordLeaveFn} text={textContent} />
           </p>
         );
       },
 
       li: ({ children }: LiProps) => {
-        const taskIndex = taskCounterRef.current;
-        const childrenArr = React.Children.toArray(children);
+        taskCounterRef.current += 1;
+        const childrenArr = Children.toArray(children);
         const inputIndex = childrenArr.findIndex(
-          (child) => React.isValidElement(child) && child.type === 'input',
+          (child) => isValidElement(child) && child.type === 'input',
         );
 
         if (inputIndex >= 0) {
-          taskCounterRef.current += 1;
-          const input = childrenArr[inputIndex] as React.ReactElement;
+          const input = childrenArr[inputIndex] as ReactElement;
           const checked = input.props.checked === true || input.props.checked === 'true';
 
           const remainingChildren = childrenArr.filter((_, i) => i !== inputIndex);
 
-          const processedChildren = React.Children.map(remainingChildren, child => {
+          const processedChildren = Children.map(remainingChildren, child => {
             if (typeof child === 'string') {
               return (
                 <SafeTextProcessor onWordHover={handleWordHoverFn} onWordLeave={handleWordLeaveFn} text={child} />
@@ -177,85 +168,62 @@ export function useMarkdownProcessor({ markdown, onWordHover, onWordLeave, onTog
             return child;
           });
 
-          return (
-            <li className="task-list-item flex items-start gap-2 my-1">
-              <input
-                type="checkbox"
-                checked={checked}
-                onChange={() => handleToggleCheckbox(taskIndex)}
-                className="mt-1 h-4 w-4 rounded border-gray-300 bg-white checked:bg-blue-500 cursor-pointer flex-shrink-0 focus:ring-2 focus:ring-blue-500"
-              />
-              <span className="flex-1 min-w-0 text-gray-700">{processedChildren}</span>
-            </li>
-          );
+           return (
+             <li className="task-list-item flex items-center gap-1 my-2">
+               <input
+                 type="checkbox"
+                 checked={checked}
+                 onChange={() => handleToggleCheckbox(taskCounterRef.current - 1)}
+                 className="h-4 w-4 rounded border-gray-300 bg-white checked:bg-blue-500 cursor-pointer flex-shrink-0 focus:ring-2 focus:ring-blue-500"
+               />
+               <span className="flex-1 min-w-0 text-gray-700 leading-relaxed">
+                 {typeof processedChildren === 'string' ? (
+                   <span className="text-sm text-gray-700">{processedChildren}</span>
+                 ) : (
+                   processedChildren
+                 )}
+               </span>
+             </li>
+           );
         }
 
         if (typeof children === 'string') {
           return (
-            <li>
-              <SafeTextProcessor onWordHover={handleWordHoverFn} onWordLeave={handleWordLeaveFn} text={children} className="text-gray-700" />
+            <li className="my-1 leading-relaxed text-gray-700">
+              {children}
             </li>
           );
         }
         return (
-          <li>
-            {React.Children.map(children, child => {
-              if (typeof child === 'string') {
-                return (
-                  <SafeTextProcessor onWordHover={handleWordHoverFn} onWordLeave={handleWordLeaveFn} text={child} className="text-gray-700" />
-                );
-              }
-              return child;
-            })}
+          <li className="my-1 leading-relaxed text-gray-700">
+            {children}
           </li>
         );
       },
 
       strong: ({ children }: StrongProps) => {
-        if (typeof children === 'string') {
-          return (
-            <strong className="text-gray-800">
-              <SafeTextProcessor onWordHover={handleWordHoverFn} onWordLeave={handleWordLeaveFn} text={children} />
-            </strong>
-          );
-        }
+        const textContent = typeof children === 'string' ? children : 
+          Children.map(children, child => typeof child === 'string' ? child : '').join('');
+        
         return (
           <strong className="text-gray-800">
-            {React.Children.map(children, child => {
-              if (typeof child === 'string') {
-                return (
-                  <SafeTextProcessor onWordHover={handleWordHoverFn} onWordLeave={handleWordLeaveFn} text={child} />
-                );
-              }
-              return child;
-            })}
+            <SafeTextProcessor onWordHover={handleWordHoverFn} onWordLeave={handleWordLeaveFn} text={textContent} />
           </strong>
         );
       },
 
       em: ({ children }: EmProps) => {
-        if (typeof children === 'string') {
-          return (
-            <em className="text-gray-600">
-              <SafeTextProcessor onWordHover={handleWordHoverFn} onWordLeave={handleWordLeaveFn} text={children} />
-            </em>
-          );
-        }
+        const textContent = typeof children === 'string' ? children : 
+          Children.map(children, child => typeof child === 'string' ? child : '').join('');
+        
         return (
           <em className="text-gray-600">
-            {React.Children.map(children, child => {
-              if (typeof child === 'string') {
-                return (
-                  <SafeTextProcessor onWordHover={handleWordHoverFn} onWordLeave={handleWordLeaveFn} text={child} />
-                );
-              }
-              return child;
-            })}
+            <SafeTextProcessor onWordHover={handleWordHoverFn} onWordLeave={handleWordLeaveFn} text={textContent} />
           </em>
         );
       },
 
-      code: ({ node, inline, className, children, ...props }: CodeProps) => {
+      code: ({ inline, className, children, ...props }: CodeProps) => {
         const match = /language-(\w+)/.exec(className || '');
         return !inline && match ? (
           <pre className="bg-gray-100 p-4 rounded-lg overflow-x-auto border border-gray-200">
@@ -268,7 +236,7 @@ export function useMarkdownProcessor({ markdown, onWordHover, onWordLeave, onTog
         );
       },
     };
-  }, [onWordHover, onWordLeave, handleToggleCheckbox]);
+  }, [onWordHover, onWordLeave, onToggleCheckbox]);
 
   return useMemo(() => {
     return (

@@ -2,11 +2,10 @@
 import type { ReactNode } from 'react';
 import { LocalStorageNoteRepository } from '../../infrastructure/repositories/LocalStorageNoteRepository';
 import { ExportService } from '../../services/ExportService';
-import { DictionaryService } from '../../services/DictionaryService';
+import { DictionaryService, dictionaryService } from '../../services/DictionaryService';
 
 const noteRepository = new LocalStorageNoteRepository();
 const exportService = new ExportService();
-const dictionaryService = new DictionaryService();
 
 interface AppContextValue {
     noteRepository: LocalStorageNoteRepository;
